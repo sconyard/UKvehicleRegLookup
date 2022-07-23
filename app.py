@@ -97,12 +97,12 @@ st.markdown("Information about the API is available from this [DVLA website](htt
 
 reg = st.text_input("Vehicle Registration to Lookup", "EXAMPLE", key="reg")
 
-if st.button('Perform single vehicle lookup'):
-    car_reg_lookup()
-
 regs = st_tags(label="Input Multiple Vehicle Registrations",
                text="Press enter to add more",
-               key="regs",)      
+               key="regs",)
+
+if st.button('Perform single vehicle lookup'):
+    car_reg_lookup()
 
 if st.button('Perform multiple vehicle lookup'):
     car_regs_lookup()
