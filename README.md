@@ -32,7 +32,7 @@ As before a function button to export the appended dataframe as a csv is also pr
 
 ## Error Handling
 
-Error handling is provided by reviwing the API response code.  If the response is not equal to 200 then an exception is triggered. A response code other thatn 200 will most likley been recieved when the vehicle registration entered is incorrect, the exception assumes this in the response.
+Error handling is provided by reviwing the API response code.  If the response is not equal to 200 then an exception is triggered. A response code other thatn 200 will most likley been recieved when the vehicle registration entered is incorrect, the exception assumes this in the response.  The returned API code is also written to aide troubleshooting if required.
 
 ![Exception](https://github.com/sconyard/UKvehicleRegLookup/blob/0f617696e4ba557604b5247ef4749766639ef1ff/images/SingleError.png)
 
