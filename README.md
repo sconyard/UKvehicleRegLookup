@@ -1,44 +1,69 @@
 # UK Vehicle Lookup from Registration
 
-Simple application to demonstrate looking up values from an API.
+A simple [Streamlit](https://streamlit.io/) app that looks up UK vehicles by registration number using the DVLA
+[Vehicle Enquiry Service (VES) API](https://developer-portal.driver-vehicle-licensing.api.gov.uk/apis/vehicle-enquiry-service/vehicle-enquiry-service-description.html).
 
-A write up on my blog is available [here](https://virtual-simon.co.uk/vehicle-enquiry-service-api-lookup-demo/)
+A write-up is available on my blog [here](https://virtual-simon.co.uk/vehicle-enquiry-service-api-lookup-demo/).
 
-Application uses Python, with Streamlit, Streamlit_tags, Pandas, Requests and the [UK Vehicle Enquiry Service API](https://developer-portal.driver-vehicle-licensing.api.gov.uk/apis/vehicle-enquiry-service/vehicle-enquiry-service-description.html#vehicle-enquiry-service-api)
+![First Launch](images/FirstLaunch.png)
 
-## How does it work
+## Features
 
-Using [Streamlit](https://streamlit.io/) makes it easier to build something usable in a few minutes.
+- **Single lookup**: a summary (make, colour, year, tax and MOT status) plus every returned field and the raw JSON.
+- **Multiple lookup**: paste registrations one per line or comma separated, or upload a `.txt`/`.csv` file. Duplicates are removed and up to 100 are looked up per batch, with a progress bar.
+- Input is tidied before it is sent: `ab12 cde` becomes `AB12CDE`. Invalid formats are rejected without calling the API.
+- Clear error messages for each failure (not found, bad API key, rate limited, service down or network error). In a batch, failures are listed separately and don't stop the run.
+- Results are cached for an hour and survive reruns, so clicking **Download results as CSV** doesn't clear the page.
+- A UAT/test environment toggle for DVLA test keys.
 
-Streamlit provides the layout, text inputs, buttons and streamlit_tags provides the list input box.
+## Getting an API key
 
-![First Launch](https://github.com/sconyard/UKvehicleRegLookup/blob/ffa051cd1ac3d20e6f8ed03554ec19911d200175/images/FirstLaunch.png)
+Register for a key at the [DVLA VES registration page](https://register-for-ves.driver-vehicle-licensing.api.gov.uk/).
+**Never commit your key.** The app reads it from (in order):
 
-The buttons link to functions that perform either a single vehicle registration lookup against the DVLA vehicle API or interate over a list provided from the list inputs.
+1. `.streamlit/secrets.toml`: copy `.streamlit/secrets.toml.example` and fill it in (this file is git-ignored)
+2. the `DVLA_API_KEY` environment variable
+3. the password box in the sidebar, if neither of the above is set
 
-The text input for the single vehicle registration includes a session_state element (key) that is passed to Requests (st.session_state.reg) and included in the query string for the API lookup. 
+## Running locally
 
-![Single Query](https://github.com/sconyard/UKvehicleRegLookup/blob/0f617696e4ba557604b5247ef4749766639ef1ff/images/SingleResponse.png)
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-The json response is flattend and passed into a pandas dataframe for display.
+## Running with Docker
 
-A function button to export the dataframe as a csv file is also included.
+```bash
+docker build -t uk-vehicle-lookup .
+docker run --rm -p 8501:8501 -e DVLA_API_KEY=your-key uk-vehicle-lookup
+```
 
-For the multi vehicle lookup a list is gathered using the [streamlit_tags](https://streamlit-tags.readthedocs.io/en/latest/) capturing a session state as per the single lookup will not work for the list, so the list is captured as a variable (regs) and passed to a for x in regs loop.
+Then open <http://localhost:8501>.
 
-The API query data is changed to use the value of x from regs.  Each json response is flattened and pd.concat used to append the data to a dataframe built outside the loop.
+## How it works
 
-![Multiple Queries](https://github.com/sconyard/UKvehicleRegLookup/blob/0f617696e4ba557604b5247ef4749766639ef1ff/images/MultiResponse.png)
+- `dvla.py` is a small API client with no Streamlit code in it. It normalises and validates the registration, then
+  POSTs `{"registrationNumber": "..."}` as JSON with the `x-api-key` header and a timeout. It returns a `LookupResult`
+  with either the vehicle data or a readable error, taken from the API's `errors[].detail` field where available.
+- `app.py` is the Streamlit UI. It flattens the JSON responses into a pandas DataFrame with `pd.json_normalize`,
+  puts the most useful columns first, and offers the table as a CSV download.
 
-As before a function button to export the appended dataframe as a csv is also provided.
+![Single Query](images/SingleResponse.png)
+![Multiple Queries](images/MultiResponse.png)
 
-## Error Handling
+## Tests
 
-Error handling is provided by reviwing the API response code.  If the response is not equal to 200 then an exception is triggered. A response code other thatn 200 will most likley been recieved when the vehicle registration entered is incorrect, the exception assumes this in the response.  The returned API code is also written to aide troubleshooting if required.
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
 
-![Exception](https://github.com/sconyard/UKvehicleRegLookup/blob/0f617696e4ba557604b5247ef4749766639ef1ff/images/SingleError.png)
+The tests mock the HTTP layer, so they don't need an API key or network access. They also run on GitHub Actions
+for every push and pull request.
 
-### Support
+## Support
 
-No support offered or liability accepted use is entirely at your own risk.
-
+No support offered or liability accepted. Use is entirely at your own risk.
