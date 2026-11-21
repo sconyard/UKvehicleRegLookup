@@ -3,8 +3,6 @@
 A simple [Streamlit](https://streamlit.io/) app that looks up UK vehicles by registration number using the DVLA
 [Vehicle Enquiry Service (VES) API](https://developer-portal.driver-vehicle-licensing.api.gov.uk/apis/vehicle-enquiry-service/vehicle-enquiry-service-description.html).
 
-A write-up is available on my blog [here](https://virtual-simon.co.uk/vehicle-enquiry-service-api-lookup-demo/).
-
 ![First Launch](images/FirstLaunch.png)
 
 ## Features
